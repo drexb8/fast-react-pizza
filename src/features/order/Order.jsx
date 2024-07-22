@@ -7,7 +7,7 @@ import {
 } from "../../utils/helpers";
 import { getOrder } from "../../services/apiRestaurant";
 import { useLoaderData } from "react-router-dom";
-
+import OrderItem from "./OrderItem";
 const order = {
   id: "ABCDEF",
   customer: "Jonas",
@@ -58,26 +58,41 @@ function Order() {
   const deliveryIn = calcMinutesLeft(estimatedDelivery);
 
   return (
-    <div>
-      <div>
-        <h2>Status</h2>
+    <div className="space-y-8 px-4 py-6">
+      <div className="flex flex-wrap items-center justify-between">
+        <h2>
+          {" "}
+          Order <span className="font-semibold">#{id}</span> Status
+        </h2>
 
-        <div>
-          {priority && <span>Priority</span>}
-          <span>{status} order</span>
+        <div className="space-x-2">
+          {priority && (
+            <span className="rounded-full bg-red-500 px-4 py-1 text-sm text-red-50">
+              Priority
+            </span>
+          )}
+          <span className="rounded-full bg-green-500 px-4 py-1 text-sm capitalize text-green-50">
+            {status} order
+          </span>
         </div>
       </div>
 
-      <div>
+      <div className="flex flex-wrap justify-between bg-stone-200 px-5 py-5">
         <p>
           {deliveryIn >= 0
             ? `Only ${calcMinutesLeft(estimatedDelivery)} minutes left 😃`
             : "Order should have arrived"}
         </p>
-        <p>(Estimated delivery: {formatDate(estimatedDelivery)})</p>
+        <p className="text-sm">
+          (Estimated delivery: {formatDate(estimatedDelivery)})
+        </p>
       </div>
-
-      <div>
+      <ul className="divide-y">
+        {cart.map((item) => (
+          <OrderItem item={item} key={item.pizzaId} />
+        ))}
+      </ul>
+      <div className="bg-stone-200 px-5 py-5">
         <p>Price pizza: {formatCurrency(orderPrice)}</p>
         {priority && <p>Price priority: {formatCurrency(priorityPrice)}</p>}
         <p>To pay on delivery: {formatCurrency(orderPrice + priorityPrice)}</p>
