@@ -18,18 +18,24 @@ function CreateOrder() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
-  const username = useSelector((state) => state.user.username);
+  const {
+    username,
+    status,
+    position,
+    address,
+    error: errorAddress,
+  } = useSelector((state) => state.user);
+
+  const isLoadingAddress = status === "loading";
   const cart = useSelector(getCart);
   const formErrors = useActionData();
   const cartTotalPrice = useSelector(getTotalCartPrice);
   const priorityPrice = withPriority ? cartTotalPrice * 0.2 : 0;
   const totalOrderPrice = cartTotalPrice + priorityPrice;
-  console.log(withPriority);
+
   return (
     <div className="px-3 py-4">
       <h2 className="mb-8 text-xl font-semibold">Ready to order? Lets go!</h2>
-
-      <button onClick={() => dispatch(fetchAddress())}>Get position</button>
 
       <Form method="POST" className="mx-auto">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -44,14 +50,18 @@ function CreateOrder() {
         </div>
 
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
-          {formErrors?.phone && <p>{formErrors.phone}</p>}
+          {formErrors?.phone && (
+            <p className="mt-5 rounded-md bg-red-200 p-2 text-xs text-red-700">
+              {formErrors.phone}
+            </p>
+          )}
           <label className="sm:basis-40">Phone number</label>
           <div className="grow">
             <input type="tel" name="phone" required className="input w-full" />
           </div>
         </div>
 
-        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
           <label className="sm:basis-40">Address</label>
           <div className="grow">
             <input
@@ -59,8 +69,29 @@ function CreateOrder() {
               name="address"
               required
               className="input w-full"
+              disabled={isLoadingAddress}
+              defaultValue={address}
             />
+            {status === "error" && (
+              <p className="mt-5 rounded-md bg-red-200 p-2 text-xs text-red-700">
+                {errorAddress}
+              </p>
+            )}
           </div>
+          {!position.latitude && !position.longitude && (
+            <span className="absolute right-[3px] top-[37px] z-20 sm:top-[5px] md:right-0 md:top-[-1px]">
+              <Button
+                type="small"
+                disabled={isLoadingAddress}
+                onClick={(e) => {
+                  e.preventDefault();
+                  dispatch(fetchAddress());
+                }}
+              >
+                Get position
+              </Button>
+            </span>
+          )}
         </div>
 
         <div className="mb-5">
@@ -75,6 +106,15 @@ function CreateOrder() {
         </div>
         <div>
           <input type="hidden" name="cart" value={JSON.stringify(cart)} />
+          <input
+            type="hidden"
+            name="position"
+            value={
+              position.latitude && position.longitude
+                ? `${position.latitude},${position.longitude}`
+                : ""
+            }
+          />
         </div>
 
         <div>
